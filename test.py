@@ -11,7 +11,7 @@ input_video_path = '/Users/sanghyunryu/documents/yolotest/final2.mp4'
 output_video_path = 'output2_onlyperson_video2.mp4'
 
 # Flask API URL 설정
-flask_api_url = 'http://localhost:5000/update_person_count'  # Flask 서버에 보낼 엔드포인트 URL
+flask_api_url = 'http://localhost:5000/congestion'  # Flask 서버에 보낼 새로운 엔드포인트 URL
 
 # 1. 파일 경로와 존재 여부 확인
 if not os.path.exists(input_video_path):
@@ -49,10 +49,10 @@ else:
 
             # Flask API로 감지된 사람 수 전송
             response = requests.post(flask_api_url, json={'person_count': person_count})
-            if response.status_code == 200:
-                print(f"Frame {frame_count}: Sent person count {person_count} to server.")
+            if response.status_code == 201:  # 201 Created로 변경
+                print(f"Frame {frame_count}: Saved person count {person_count} to congestion table.")
             else:
-                print(f"Failed to send person count to server for frame {frame_count}.")
+                print(f"Failed to save person count to congestion table for frame {frame_count}.")
 
             # 탐지 결과를 프레임에 주석 추가
             annotated_frame = results[0].plot()

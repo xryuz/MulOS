@@ -171,6 +171,21 @@ def create_return():
 
     return jsonify({'message': '반납 기록이 추가되었습니다!'}), 201
 
+# 사람 수를 데이터베이스에 저장하는 엔드포인트 (POST /congestion)
+@app.route('/congestion', methods=['POST'])
+def add_congestion():
+    data = request.json
+    person_count = data.get('person_count', 0)  # 기본값을 0으로 설정
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO congestion (person_num) VALUES (%s)", (person_count,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({'message': f'Saved person count {person_count} to congestion table.'}), 201
+
 # Flask 서버 실행
 if __name__ == '__main__':
     app.run(debug=True)
