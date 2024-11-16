@@ -1,5 +1,8 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 import pymysql
+import qrcode
+from PIL import Image
+from io import BytesIO
 from datetime import datetime
 
 app = Flask(__name__)
@@ -185,6 +188,57 @@ def add_congestion():
     conn.close()
 
     return jsonify({'message': f'Saved person count {person_count} to congestion table.'}), 201
+
+@app.route('/generate_qr', methods=['POST'])
+def generate_qr():
+    data = request.json
+    student_id = data.get('student_id')
+
+    # student_id 유효성 검사
+    if not student_id:
+        return jsonify({'error': 'student_id is required'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT student_id FROM user WHERE student_id = %s', (student_id,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not result:
+        return jsonify({'error': 'User not found'}), 404
+
+    # QR 코드 생성
+    qr = qrcode.make(student_id)
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    # QR 코드 이미지 반환
+    return send_file(buffer, mimetype='image/png')
+
+@app.route('/scan_qr', methods=['POST'])
+def check_student_id():
+    data = request.json
+    student_id = data.get('student_id')
+
+    # student_id 유효성 검사
+    if not student_id:
+        return jsonify({'error': 'student_id is required'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT student_id FROM user WHERE student_id = %s', (student_id,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if result:
+        return jsonify({'status': 1})  # student_id가 데이터베이스에 존재함
+    else:
+        return jsonify({'status': 0})  # student_id가 데이터베이스에 존재하지 않음
+
+
 
 # Flask 서버 실행
 if __name__ == '__main__':
