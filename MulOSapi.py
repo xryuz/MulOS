@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request, send_file, make_response
 import pymysql
 import qrcode
 from PIL import Image
@@ -215,7 +215,11 @@ def generate_qr():
     buffer.seek(0)
 
     # QR 코드 이미지 반환
-    return send_file(buffer, mimetype='image/png')
+    response = make_response(buffer.getvalue())
+    response.headers.set('Content-Type', 'image/png')
+    response.headers.set('Content-Disposition', 'inline; filename=qr_code.png')
+
+    return response
 
 @app.route('/scan_qr', methods=['POST'])
 def check_student_id():
